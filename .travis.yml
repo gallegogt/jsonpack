@@ -19,7 +19,7 @@ compiler:
 before_install:
     - sudo apt-get update -qq
     - sudo apt-get install -y cmake
-    - sudo apt-get install -y libboost-dev
+    - sudo apt-get install -y libboost-dev libboost-system-dev libboost-filesystem-dev libboost-test-dev
 
 script:
     - mkdir build/
