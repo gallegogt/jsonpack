@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/gallegogt/jsonpack.svg?branch=development)](https://travis-ci.org/gallegogt/jsonpack)
+
 #JsonPack
 
 ## Overview
@@ -110,6 +112,17 @@ int main()
   $ cmake ..  -DJSONPACK_BUILD_EXAMPLES=ON -DCMAKE_BUILD_TYPE=Release
   $ make
   $ sudo make install
+  ```
+
+* With example:
+
+  ```bash
+  $ cd jsonpack
+  $ mkdir build
+  $ cd build
+  $ cmake ..  -DJSONPACK_BUILD_EXAMPLES=ON -DJSONPACK_BUILD_TEST=ON
+  $ cmake --build . --clean-first
+  $ make test
   ```
 
 
