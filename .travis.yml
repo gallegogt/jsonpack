@@ -1,0 +1,30 @@
+#
+# This build script
+# Author: Yolier Galan Tasse <gallegogt@gmail.com>
+#
+# For any issues of feedback report it at Github
+#
+# Json Pack project
+#
+
+language: cpp
+
+os:
+    - linux
+    # - osx
+
+compiler:
+    - gcc
+
+before_install:
+    - sudo apt-get update -qq
+    - sudo apt-get install -y cmake
+    - sudo apt-get install -y libboost-dev
+
+script:
+    - mkdir build/
+    - cd build/
+    - cmake ..  -DJSONPACK_BUILD_EXAMPLES=ON -DJSONPACK_BUILD_TEST=ON
+    - cmake --build . --clean-first
+    - make test
+
