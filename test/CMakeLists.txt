@@ -19,18 +19,18 @@ FOREACH (SRC_FILE ${tests_SRCs})
 
 	IF ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
 		TARGET_LINK_LIBRARIES(${FILE_NAME}
-		jsonpack-static
-		${Boost_FILESYSTEM_LIBRARY}
-		${Boost_SYSTEM_LIBRARY}
-		${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
-	)
+            jsonpack-static
+            ${Boost_FILESYSTEM_LIBRARY}
+            ${Boost_SYSTEM_LIBRARY}
+            ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
+        )
 	ELSE()
 		TARGET_LINK_LIBRARIES(${FILE_NAME}
-		jsonpack
-		${Boost_FILESYSTEM_LIBRARY}
-		${Boost_SYSTEM_LIBRARY}
-		${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
-	)
+            jsonpack
+            ${Boost_FILESYSTEM_LIBRARY}
+            ${Boost_SYSTEM_LIBRARY}
+            ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
+        )
 	ENDIF()
 
     ADD_TEST(NAME ${FILE_NAME}
