@@ -59,7 +59,8 @@ struct key
 
 /**
  * Collection of key/value pairs (javascript object)
- * std::unordered_map adapter overloading operator[](const char*) for easy lookup
+ * std::unordered_map adapter overloading operator[](const char*) for easy lookup,
+ * added json_unpack() member for parsing json object
  */
 template<class _KeyType,
          class _ValType,
@@ -78,12 +79,26 @@ public:
 
     base_map _umap;
     jsonpack::parser _p;
+    bool _auto_clear;
 public:
 
-    explicit umap(size_type __n = 10):
+    explicit umap(size_type __n, bool auto_clear):
         _umap(__n),
-        _p()
+        _p(),
+        _auto_clear(auto_clear)
     {}
+
+    explicit umap(bool auto_clear = true):
+        _umap(),
+        _p(),
+        _auto_clear(auto_clear)
+    {}
+
+    ~umap()
+    {
+        if(_auto_clear)
+            parser::clear(this);
+    }
 
     iterator begin() noexcept
     {return _umap.begin();}
@@ -113,8 +128,8 @@ public:
     { _umap.clear(); }
 
     /**
-     * Overload for easy lookup. Throw exception on fail
-     * return a copy of element or throw exception
+     * Overload for easy lookup.
+     * Return a copy of element or throw exception if not found
      */
     mapped_type operator[](const char* str_key)
     {
@@ -133,12 +148,12 @@ public:
     }
 
     /**
-     * Parse json string into a jsonpack::object (this)
+     * Parse json string into a jsonpack::object_t or jsonpack::array_t(this)
      */
     void json_unpack(const char* json, const std::size_t &len)
     {
         if(!_p.json_validate(json, len, *this))
-            throw jsonpack_error( _p.err_msg().c_str() );
+			throw invalid_json( _p.err_msg().c_str() );
     }
 };
 

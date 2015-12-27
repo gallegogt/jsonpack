@@ -22,6 +22,7 @@
 #include <vector>
 #include <string.h>
 
+#include "jsonpack/vector.hpp"
 #include "jsonpack/umap.hpp"
 
 JSONPACK_API_BEGIN_NAMESPACE
@@ -109,7 +110,7 @@ typedef jsonpack::umap<key, value, key_hash >  object_t;
 /**
  * Sequence of values
  */
-typedef std::vector<value> array_t;
+typedef vector<value> array_t;
 
 /**
  * For union active field control
@@ -123,8 +124,9 @@ enum fields
 };
 
 TYPE_BEGIN_NAMESPACE
-    template<typename T>
-    struct json_traits;
+template<typename T>
+struct json_traits;
+
 JSONPACK_API_END_NAMESPACE //type
 
 /**
@@ -135,7 +137,7 @@ JSONPACK_API_END_NAMESPACE //type
  */
 struct value
 {
-    explicit value():_field(_NULL){}
+    value():_field(_NULL){}
 
     fields _field;
 
@@ -166,36 +168,79 @@ struct value
     }
 
     /**
-     * Get the current json value into the given reference,
-     * performing conversion
+     * Type check
+     */
+    bool is_null()
+    { return (_field == _NULL || (_field == _POS && _pos._type == JTK_NULL ) ); }
+
+    bool is_boolean()
+    { return (_field == _POS && ( _pos._type == JTK_TRUE || _pos._type == JTK_FALSE ) ); }
+
+    bool is_integer()
+    { return (_field == _POS && _pos._type == JTK_INTEGER ); }
+
+    bool is_real()
+    { return (_field == _POS && _pos._type == JTK_REAL ); }
+
+    bool is_object()
+    { return (_field == _OBJ); }
+
+    bool is_array()
+    { return (_field == _ARR); }
+
+
+    /**
+     * Explicit type conversion between current JSON value
+     * and a compatible non-pointer type.
      */
     template<typename T>
-    void operator()(T& _val)
+    T get(typename
+          std::enable_if<
+          ! std::is_pointer<T>::value
+          ,int>::type* = nullptr ) const
     {
-        if( !type::json_traits<T&>::match_token_type(*this) )
+        T  _val;
+        type::json_traits<T&>::extract(*this, nullptr, _val);
+        return _val;
+    }
+
+
+    /**
+     * Explicit type conversion between the current json value
+     * and the given reference
+     */
+    template<typename T >
+    void operator()(T& _val, typename
+                    std::enable_if<
+                    ! std::is_pointer<T>::value
+                    ,int>::type* = nullptr)
+    {
+        if(_field == _POS && !type::json_traits<T&>::match_token_type(*this) )
             throw type_error("Types mismatch");
 
         type::json_traits<T&>::extract(*this, nullptr, _val);
     }
 
     /**
-     * Lookup when json value is an object
+     * Lookup when json value is
+     * OBJECT
      */
     value operator[](const std::string &__str_key)
     {
         if(_field != _OBJ) throw type_error("current value is not an object!");
-            return _obj->operator [](__str_key.c_str());
+        return _obj->operator [](__str_key.c_str());
     }
 
     /**
-     * Vector operations when json value is an array
-     * throw exception if current value is not an array
+     * Vector operations when json value is
+     * ARRAY
      */
     value operator[](const std::size_t __index)
     {
         if(_field != _ARR) throw type_error("current value is not an array!");
         return _arr->operator [](__index);
     }
+
     std::size_t size() const
     {
         if(_field != _ARR) throw type_error("current value is not an array!");
@@ -227,70 +272,6 @@ struct value
     }
 };
 
-//forward
-static inline void delete_object(object_t *obj);
-
-/**
- * Function to free array_t
- */
-static inline void delete_array(array_t *arr)
-{
-    for(array_t::iterator elem = arr->begin(); elem != arr->end(); elem++)
-    {
-        if((*elem)._field == _OBJ)
-        {
-            delete_object((*elem)._obj);
-        }
-        else if((*elem)._field == _ARR)
-        {
-            delete_array((*elem)._arr);
-        }
-    }
-
-    arr->clear();
-    delete arr;
-    arr = nullptr;
-}
-
-/**
- * Function to free object_t
- */
-static inline void delete_object(object_t *obj)
-{
-    for(object_t::iterator it = obj->begin(); it != obj->end(); it++)
-    {
-        if(it->second._field == _OBJ)
-        {
-            delete_object(it->second._obj);
-        }
-        else if(it->second._field == _ARR)
-        {
-            delete_array(it->second._arr);
-        }
-    }
-
-    obj->clear();
-    delete obj;
-    obj = nullptr;
-}
-
-/**
- * Function to free internal elements
- */
-static inline void clean_object(object_t & obj)
-{
-    for(object_t::iterator it = obj.begin(); it != obj.end(); it++)
-    {
-        if(it->second._field == _OBJ)
-        {
-            delete_object(it->second._obj);
-        }
-        else if(it->second._field == _ARR)
-        {
-            delete_array(it->second._arr);
-        }
-    }
-}
 
 
 JSONPACK_API_END_NAMESPACE

@@ -22,6 +22,7 @@ ENDIF ()
 #
 OPTION(JSONPACK_BUILD_EXAMPLES "Build jsonpack examples." OFF)
 OPTION(JSONPACK_BUILD_TEST "Build all tests." OFF)
+OPTION(JSONPACK_BUILD_BENCHMARKS "Build jsonpack benchmarks." OFF)
 
 SET (prefix ${CMAKE_INSTALL_PREFIX})
 SET (exec_prefix "\${prefix}")
@@ -50,18 +51,13 @@ ENDIF()
 
 SET(CMAKE_INSTALL_DIR "${_CMAKE_INSTALL_DIR}" CACHE PATH "The directory cmake fiels are installed in")
 
-# TODO example
-IF(JSONPACK_BUILD_EXAMPLES)
-    ADD_SUBDIRECTORY(example/)
-ENDIF()
-
 SET (3rdparty_SOURCES src/3rdparty/format.cpp)
 
 LIST (APPEND jsonpack_SOURCES
     src/parser.cpp
     src/3rdparty/format.cpp
 )
-
+ 
 LIST (APPEND jsonpack_HEADERS
     include/jsonpack.hpp
     include/jsonpack/buffer.hpp
@@ -72,6 +68,7 @@ LIST (APPEND jsonpack_HEADERS
     include/jsonpack/types.hpp
     include/jsonpack/config.hpp
     include/jsonpack/umap.hpp
+    include/jsonpack/vector.hpp
     include/jsonpack/util/builder.hpp
     include/jsonpack/type/integers.hpp
     include/jsonpack/type/reals.hpp
@@ -143,6 +140,11 @@ IF ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
     ELSE ()
         SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W3")
     ENDIF ()
+
+	# Visual C++ default stack size is 1MB. This is not enough to
+	# instantiate templates up to the default maximum depth allowed, 256.
+	SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -STACK:4194304")
+
 ENDIF ()
 
 IF ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC90" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC10" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC11")
@@ -156,13 +158,21 @@ INSTALL (FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.pc
     DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/pkgconfig"
     COMPONENT pkgconfig)
 
-#
-# TEST
-#
+# EXAMPLES
+IF(JSONPACK_BUILD_EXAMPLES)
+    ADD_SUBDIRECTORY(example/)
+ENDIF()
+
+# TESTS
 IF(JSONPACK_BUILD_TEST)
     find_package(Boost COMPONENTS system filesystem unit_test_framework REQUIRED)
     ENABLE_TESTING()
     ADD_SUBDIRECTORY(test/)
 ENDIF()
 
+# BENCHMARKS
+IF(JSONPACK_BUILD_BENCHMARKS)
+    ADD_SUBDIRECTORY(benchmarks/)
+    INSTALL (TARGETS jsonpack DESTINATION "${CMAKE_INSTALL_PREFIX}/bin")
+ENDIF()
 
